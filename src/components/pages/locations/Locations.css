@@ -1,0 +1,52 @@
+.container {
+  width: 100%;
+  padding: 0 15px; /* Add padding to left and right */
+}
+
+.content {
+  margin-top: 20px; /* Add margin to separate Navbar from content */
+}
+
+.card {
+  padding-right: 1.5rem;
+   margin: 0 15px; /* Add margin to left and right */
+}
+
+
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+h1 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
