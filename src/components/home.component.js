@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import HomeHolidayComponent from "./HomeHolidayComponent"; // Импортиране на компонента
 
 import UserService from "../services/user.service";
 
@@ -11,29 +12,19 @@ export default class Home extends Component {
     };
   }
 
-  componentDidMount() {
-    UserService.getPublicContent().then(
-      response => {
-        this.setState({
-          content: response.data
-        });
-      },
-      error => {
-        this.setState({
-          content:
-            (error.response && error.response.data) ||
-            error.message ||
-            error.toString()
-        });
-      }
-    );
-  }
+  
 
   render() {
     return (
       <div className="container">
+        <h1>Welcome to Travel Agency</h1>
+        <p>
+          We are a travel agency offering exciting vacations to a variety of destinations around the world.
+          Explore some of our vacation options, and if you wish to make a reservation,
+          you can create an account or log in if you already have one to complete your booking.
+        </p>
         <header className="jumbotron">
-          <h3>{this.state.content}</h3>
+          <HomeHolidayComponent /> {/* Включване на компонента */}
         </header>
       </div>
     );

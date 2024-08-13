@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import Location from "../components/pages/locations/Location";
-import UserService from "../services/user.service";
-import EventBus from "../common/EventBus";
+import UserService from "../../services/user.service";
+import EventBus from "../../common/EventBus"
 
+
+import CreateReservationComponent from "../CreateReservation";
 export default class BoardAdmin extends Component {
   constructor(props) {
     super(props);
@@ -42,10 +43,11 @@ export default class BoardAdmin extends Component {
   render() {
     return (
       <div className="container">
-        <header className="jumbotron">
+        <header className="jumbotron1">
+          <h1>Create Reservation</h1>
           <h3>{this.state.content}</h3>
           {/* Conditionally render the Location component if the user is authorized */}
-          {this.state.isAuthorized && <Location />}
+          {this.state.isAuthorized && <CreateReservationComponent />}
         </header>
       </div>
     );

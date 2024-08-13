@@ -2,23 +2,21 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Holidays.css';
 import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 import HolidayForm from './HolidayAdminForm';
 
-
-
-
-axios.defaults.baseURL = 'http://localhost:8081';
+axios.defaults.baseURL = 'http://localhost:8080';
 
 const Holidays = () => {
   const [locations, setLocations] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     price: '',
-    locationId: '',
-    date: new Date(),
-    duration: 1,
+    location: null,  // Changed from locationId to full location object
+    duration: 0,
     freeSlots: 0,
+    date: new Date(),  // Ensure the date is initialized
   });
   const [errors, setErrors] = useState({});
   const [createdHolidays, setCreatedHolidays] = useState([]);
@@ -26,55 +24,108 @@ const Holidays = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get('/locations');
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user?.accessToken;
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await axios.get('/locations', config);
+
         setLocations(response.data);
+
       } catch (error) {
         console.error('Error fetching locations:', error);
       }
     };
 
+    fetchLocations();
+  }, []); 
+
+
+  useEffect(() => {
     const fetchHolidays = async () => {
       try {
-        const response = await axios.get('/holidays');
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user?.accessToken;
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await axios.get('/holidays', config);
         setCreatedHolidays(response.data);
+
       } catch (error) {
         console.error('Error fetching holidays:', error);
       }
     };
 
-    fetchLocations();
     fetchHolidays();
-  }, []);
+  }, []); 
+
 
   const createHoliday = async (event) => {
     event.preventDefault();
+  
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user?.accessToken;
 
-    if (validateForm()) {
-      try {
-        const response = await axios.post('/holidays', {
-          location: parseInt(formData.locationId, 10),
-          title: formData.title,
-          startDate: formData.date.toISOString(),
-          duration: formData.duration,
-          price: formData.price,
-          freeSlots: formData.freeSlots,
-        }, {
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-        if (response.status === 201) {
-          console.log('Holiday created successfully:', response.data);
-          setCreatedHolidays([response.data, ...createdHolidays]);
-        }
-      } catch (error) {
-        console.error('Error creating holiday:', error);
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const formattedStartDate = formData.date.toISOString().split('T')[0];
+  
+      // Създаване на обекта с необходимите полета за заявката
+      const holidayData = {
+        duration: formData.duration,
+        freeSlots: formData.freeSlots,
+        price: parseFloat(formData.price),
+        location: {
+          number: formData.location.number,
+          country: formData.location.country,
+          city: formData.location.city,
+          street: formData.location.street,
+          imageUrl: formData.location.imageUrl,
+          id: formData.location.id,
+        },
+        id: formData.location.id, // Тук се предполага, че id-то на holiday ще е същото като на локацията.
+        title: formData.title,
+        startDate: formattedStartDate,
+      };
+  
+      const response = await axios.post('/holidays', holidayData, config);
+  
+      if (response.status === 201) {
+        console.log('Holiday created successfully:', response.data);
+        setCreatedHolidays([response.data, ...createdHolidays]);
       }
+    } catch (error) {
+      console.error('Error creating holiday:', error);
     }
   };
+  
+  
+
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    if (name === 'location') {
+      const selectedLocation = locations.find(location => location.id === parseInt(value, 10));
+      setFormData({ ...formData, location: selectedLocation });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleDateChange = (date) => {
@@ -102,11 +153,11 @@ const Holidays = () => {
               <div className="card-body">
                 <h1>Holidays</h1>
                 <p>All created holidays and details</p>
-                {createdHolidays.map(holiday => (
-                  <HolidayForm key={holiday.id} holiday={holiday} />
-                ))}
               </div>
             </div>
+            {createdHolidays.map(holiday => (
+                  <HolidayForm key={holiday.id} holiday={holiday} />
+                ))}
           </div>
           <div className="col-md-4 mb-4">
             <div className="card">
@@ -120,7 +171,7 @@ const Holidays = () => {
                       className="form-control"
                       id="title"
                       name="title"
-                      placeholder="Holiday Title"
+                      placeholder="Title"
                       value={formData.title}
                       onChange={handleInputChange}
                       required
@@ -133,19 +184,19 @@ const Holidays = () => {
                       className="form-control"
                       id="price"
                       name="price"
-                      placeholder="Holiday Price"
+                      placeholder="Price"
                       value={formData.price}
                       onChange={handleInputChange}
                       required
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="locationId" className="form-label">Location</label>
+                    <label htmlFor="location" className="form-label">Location</label>
                     <select
                       className="form-control"
-                      id="locationId"
-                      name="locationId"
-                      value={formData.locationId}
+                      id="location"
+                      name="location"
+                      value={formData.location?.id || ""}
                       onChange={handleInputChange}
                       required
                     >
@@ -157,6 +208,7 @@ const Holidays = () => {
                       ))}
                     </select>
                   </div>
+
                   <div className="form-group">
                     <label htmlFor="date" className="form-label">Date</label>
                     <DatePicker
@@ -164,8 +216,11 @@ const Holidays = () => {
                       onChange={handleDateChange}
                       dateFormat="dd/MM/yyyy"
                       className="form-control"
+                      calendarClassName="calendar" // Add custom class for the calendar
                     />
                   </div>
+
+                  
                   <div className="form-group">
                     <label htmlFor="duration" className="form-label">Duration</label>
                     <input
@@ -194,7 +249,7 @@ const Holidays = () => {
                     />
                     {errors.freeSlots && <small className="text-danger">{errors.freeSlots}</small>}
                   </div>
-                  <button type="submit" className="btn btn-primary mt-3">
+                  <button type="submit" className="btn btn-outline-primary mt-3">
                     Create Holiday
                   </button>
                 </form>

@@ -3,7 +3,7 @@ import axios from 'axios';
 import './Locations.css';
 import LocationForm from './LocationForm';
 
-axios.defaults.baseURL = 'http://localhost:8081';
+axios.defaults.baseURL = 'http://localhost:8080';
 
 const Locations = () => {
   const [formData, setFormData] = useState({
@@ -13,32 +13,95 @@ const Locations = () => {
     country: ''
   });
   const [locations, setLocations] = useState([]);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get('/locations');
+        const user = JSON.parse(localStorage.getItem('user'));
+        const token = user?.accessToken;
+
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+
+        const response = await axios.get('/locations', config);
+
         setLocations(response.data);
       } catch (error) {
         console.error('Error fetching locations:', error);
       }
     };
+
     fetchLocations();
   }, []);
 
+  const validateForm = () => {
+    const { street, number, city, country } = formData;
+    if (!street || !number || !city || !country) {
+      setErrorMessage('All fields are required.');
+      return false;
+    }
+    setErrorMessage('');
+    return true;
+  };
+
   const createLocation = async (event) => {
     event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     try {
-      const response = await axios.post('/locations', formData, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user?.accessToken;
+
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.post('/locations', formData, config);
 
       if (response.status === 201) {
         console.log('Location created successfully:', response.data);
         setLocations([response.data, ...locations]);
+        setFormData({
+          street: '',
+          number: '',
+          city: '',
+          country: ''
+        });
       }
     } catch (error) {
       console.error('Error creating location:', error);
+    }
+  };
+
+  const deleteLocation = async (locationId) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      const token = user?.accessToken;
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const response = await axios.delete(`/locations/${locationId}`, config);
+
+      if (response.status === 200 && response.data) {
+        console.log('Location deleted successfully');
+        setLocations(locations.filter(location => location.id !== locationId));
+      }
+    } catch (error) {
+      console.error('Error deleting location:', error);
     }
   };
 
@@ -58,7 +121,7 @@ const Locations = () => {
               </div>
             </div>
             {locations.map((location) => (
-              <LocationForm key={location.id} location={location} />
+              <LocationForm key={location.id} location={location} onDelete={deleteLocation} />
             ))}
           </div>
           <div className="col-md-4 mb-4">
@@ -66,6 +129,7 @@ const Locations = () => {
               <div className="card-body">
                 <h1>Create A New Location</h1>
                 <form onSubmit={createLocation} className="mt-4">
+                  {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
                   <div className="form-group">
                     <label htmlFor="street" className="form-label">Street</label>
                     <input
@@ -114,7 +178,7 @@ const Locations = () => {
                       required
                     />
                   </div>
-                  <button type="submit" className="btn btn-primary mt-3">
+                  <button type="submit" className="btn btn-outline-primary mt-3">
                     Create Location
                   </button>
                 </form>

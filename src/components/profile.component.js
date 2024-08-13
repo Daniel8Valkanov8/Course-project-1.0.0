@@ -1,61 +1,93 @@
-import React, { Component } from "react";
-import { Navigate } from "react-router-dom";
-import AuthService from "../services/auth.service";
+import React, { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import AuthService from '../services/auth.service';
+import Modal from './Profile-Edit-Modal';
 
-export default class Profile extends Component {
-  constructor(props) {
-    super(props);
+const Profile = () => {
+  const [redirect, setRedirect] = useState(null);
+  const [userReady, setUserReady] = useState(false);
+  const [currentUser, setCurrentUser] = useState({ username: '' });
+  const [showModal, setShowModal] = useState(false);
+  const [updatedUsername, setUpdatedUsername] = useState('');
 
-    this.state = {
-      redirect: null,
-      userReady: false,
-      currentUser: { username: "" }
-    };
-  }
-
-  componentDidMount() {
-    const currentUser = AuthService.getCurrentUser();
-
-    if (!currentUser) this.setState({ redirect: "/home" });
-    this.setState({ currentUser: currentUser, userReady: true })
-  }
-
-  render() {
-    if (this.state.redirect) {
-      return <Navigate to={this.state.redirect} />
+  useEffect(() => {
+    const user = AuthService.getCurrentUser();
+    if (!user) {
+      setRedirect('/home');
+    } else {
+      setCurrentUser(user);
+      setUserReady(true);
     }
+  }, []);
 
-    const { currentUser } = this.state;
+  const handleShow = () => {
+    setUpdatedUsername(currentUser.username);
+    setShowModal(true);
+  };
 
-    return (
-      <div className="container">
-        {(this.state.userReady) ?
-        <div>
-        <header className="jumbotron">
-          <h3>
-            Welcome <strong>{currentUser.username}</strong>
-          </h3>
-        </header>
-        <p>
-          <strong>Token:</strong>{" "}
-          {currentUser.accessToken.substring(0, 20)} ...{" "}
-          {currentUser.accessToken.substr(currentUser.accessToken.length - 20)}
-        </p>
-        <p>
-          <strong>Id:</strong>{" "}
-          {currentUser.id}
-        </p>
-        <p>
-          <strong>Email:</strong>{" "}
-          {currentUser.email}
-        </p>
-        <strong>Authorities:</strong>
-        <ul>
-          {currentUser.roles &&
-            currentUser.roles.map((role, index) => <li key={index}>{role}</li>)}
-        </ul>
-      </div>: null}
-      </div>
-    );
+  const handleClose = () => {
+    setShowModal(false);
+  };
+
+  const handleChange = (event) => {
+    setUpdatedUsername(event.target.value);
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    console.log('Updated Username:', updatedUsername);
+    setCurrentUser((prevUser) => ({
+      ...prevUser,
+      username: updatedUsername
+    }));
+    setShowModal(false);
+  };
+
+  if (redirect) {
+    return <Navigate to={redirect} />;
   }
-}
+
+  return (
+    <div className="container">
+      {userReady && (
+        <div>
+          <header className="jumbotron">
+            <h3>
+              Welcome <strong>{currentUser.username}</strong>
+            </h3>
+            <button onClick={handleShow} className='btn btn-outline-info mt-2'>Edit Profile</button>
+          </header>
+          <p>
+            <strong>Token:</strong>{" "}
+            {currentUser.accessToken.substring(0, 20)} ...{" "}
+            {currentUser.accessToken.substr(currentUser.accessToken.length - 20)}
+          </p>
+          <p>
+            <strong>Id:</strong>{" "}
+            {currentUser.id}
+          </p>
+          <p>
+            <strong>Email:</strong>{" "}
+            {currentUser.email}
+          </p>
+          <strong>Authorities:</strong>
+          <ul>
+            {currentUser.roles && currentUser.roles.map((role, index) => (
+              <li key={index}>{role}</li>
+            ))}
+          </ul>
+         
+          <Modal
+            show={showModal}
+            onClose={handleClose}
+            onSubmit={handleSubmit}
+            username={updatedUsername}
+            onUsernameChange={handleChange}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Profile;

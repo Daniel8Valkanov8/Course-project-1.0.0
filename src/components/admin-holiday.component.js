@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import Location from "../components/pages/locations/Location";
+import Holiday from "../components/pages/holidays/Holiday";
 import UserService from "../services/user.service";
 import EventBus from "../common/EventBus";
 
-export default class BoardAdmin extends Component {
+export default class BoardAdminHoliday extends Component {
   constructor(props) {
     super(props);
 
@@ -45,7 +45,7 @@ export default class BoardAdmin extends Component {
         <header className="jumbotron">
           <h3>{this.state.content}</h3>
           {/* Conditionally render the Location component if the user is authorized */}
-          {this.state.isAuthorized && <Location />}
+          {this.state.isAuthorized && <Holiday />}
         </header>
       </div>
     );

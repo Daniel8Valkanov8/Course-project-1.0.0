@@ -5,21 +5,18 @@ import "./App.css";
 
 import AuthService from "./services/auth.service";
 
+import AuthVerify from "./common/auth-verify";
+import EventBus from "./common/EventBus";
 import Login from "./components/login.component";
 import Register from "./components/register.component";
 import Home from "./components/home.component";
 import Profile from "./components/profile.component";
-import BoardUser from "./components/board-user.component";
 import BoardModerator from "./components/board-moderator.component";
 import BoardAdmin from "./components/board-admin.component"; 
-
-
-import Location from "./components/pages/locations/Location"
-import Holiday from "./components/pages/holidays/Holiday";
-import Reservation  from "./components/pages/reservations/Reservation";
-
- import AuthVerify from "./common/auth-verify";
-import EventBus from "./common/EventBus";
+import BoardAdminHoliday from "./components/admin-holiday.component";
+import CreateReservation from "./components/user-extendsboards/user-create-reservation.component";
+import BoardAdminAllReservations from "./components/admin-all-reservations.component";
+import NotFound from "./components/NotFound"; // Импортирайте компонента за 404
 
 class App extends Component {
   constructor(props) {
@@ -85,39 +82,12 @@ class App extends Component {
                 </Link>
               </li>
             )}
-
-            {showAdminBoard && (
-              <li className="nav-item">
-                <Link to={"/admin"} className="nav-link">
-                  Admin Board
-                </Link>
-              </li>
-            )}
-            
-
-            {currentUser && (
-              <li className="nav-item">
-                <Link to={"/user"} className="nav-link">
-                  User
-                </Link>
-              </li>
-            )}
-
-            {currentUser && (
-              <li className="nav-item">
-                <Link to={"/reservations"} className="nav-link">
-                  Make Reservation
-                </Link>
-              </li>
-            )}
-
             {showAdminBoard && (
               <li className="nav-item">
                 <Link to={"/holidays"} className="nav-link">
                   Holidays
                 </Link>
-              </li>
-            )}
+              </li>)}
 
             {showAdminBoard && (
               <li className="nav-item">
@@ -126,7 +96,21 @@ class App extends Component {
                 </Link>
               </li>
             )}
+            {showAdminBoard && (
+              <li className="nav-item">
+                <Link to={"/all-reservations"} className="nav-link">
+                  All Reservations
+                </Link>
+              </li>
+            )}
 
+            {currentUser && (
+              <li className="nav-item">
+                <Link to={"/user-reservations"} className="nav-link">
+                  Create Reservation
+                </Link>
+              </li>
+            )}
           </div>
 
           {currentUser ? (
@@ -138,7 +122,7 @@ class App extends Component {
               </li>
               <li className="nav-item">
                 <a href="/login" className="nav-link" onClick={this.logOut}>
-                  LogOut
+                  Logout
                 </a>
               </li>
             </div>
@@ -166,18 +150,16 @@ class App extends Component {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/user" element={<BoardUser />} />
+            <Route path="/user-reservations" element={<CreateReservation />} />
             <Route path="/mod" element={<BoardModerator />} />
-            <Route path="/admin" element={<BoardAdmin />} />
-
-
-            
-            <Route path="/holidays" element={<Holiday />} />
-            <Route path="/reservations" element={<Reservation />} />
+            <Route path="/locations" element={<BoardAdmin />} />
+            <Route path="/holidays" element={<BoardAdminHoliday />} />
+            <Route path="/all-reservations" element={<BoardAdminAllReservations />} />
+            <Route path="*" element={<NotFound />} /> {/* Добавете този маршрут */}
           </Routes>
         </div>
 
-        { <AuthVerify logOut={this.logOut}/> }
+        <AuthVerify logOut={this.logOut} />
       </div>
     );
   }
